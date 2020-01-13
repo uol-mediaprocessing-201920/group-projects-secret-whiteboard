@@ -6,6 +6,7 @@ Abgeschlossen
 - Blurring durch Schwärzen ersetzt aufgrund von besserer Performance
 
 Sind dabei
+- Blurring statt Schwärzung verwenden
 - Parameter anpassen
 - Contours, die in die Margin reichen, nicht zählen lassen
 - Doku schreiben
@@ -27,24 +28,25 @@ Keno Rott (Fach-Bachelor Informatik)
 
 # Project Overview
 
-Handwritten notes on whiteboards or blackboards can be sensitive or contain confidential parts. To protect handwritten notes like this, the goal of our project was to develop a program that finds a specified pattern in images and blurs its content to be unrecognizable.
-Our pattern is a rectangle containing a slightly smaller dashed rectangle with the confidential texts inside.
+Handwritten notes on whiteboards or blackboards can be sensitive or contain confidential parts. To protect handwritten notes like this, the goal of our project was to develop a program that finds a specified pattern in images and blurs its content to be unrecognizable. Our pattern, called "secret pattern", is a rectangle containing a slightly smaller dashed rectangle with the confidential texts inside.
 
-![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/doc_images/sample0.jpg)
+![secret pattern](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/doc_images/sample0.jpg)
 
 # Use cases
 
 ## Lecture recording software
 
-Some universities (like the Carl von Ossietzky university in Oldenburg) use **automated systems** for lecture recording und uploading as a service for students. Since the lectures may contain **sensitive data** that should not be public, like access credentials to private webservers, copyrighted information or solutions for exam exercises (so they can be used again in the future), providing a way to hide sensitive information **without manually editing** the video would be helpful.
+Some universities (like the Carl von Ossietzky university in Oldenburg) use automated systems for lecture recording und uploading as a service for students. Since the lectures may contain sensitive data that should not be public, like access credentials to private webservers, copyrighted information or solutions for exam exercises (so they can be used again in the future), providing a way to hide sensitive information without manually editing the video would be helpful.
 
 ## Privacy in real-life video streaming (possible in the future when livestreams are implemented as the input)
 
-When livestreaming videogames, with common screen-capturing softwares like OBS it is possible to select which windows with non-sensitive information are captured. When doing streaming in real-life there are **no mechanisms** like that and the only option to protect the personal information of the streamer and/or others is **image processing**.
+When livestreaming videogames, with common screen-capturing softwares like OBS it is possible to select which windows with non-sensitive information are captured. When doing streaming in real-life there are no mechanisms like that and the only option to protect the personal information of the streamer and/or others is image processing.
 
 # 0. Project Setup
 
 ## Install dependencies
+
+As the default OpenCV version in Google Colab is outdated, we need to satisfy this dependency manually by upgrading to at least OpenCV 4.1.1.26.
 
 ```python=
 !pip install opencv-python==4.1.1.26
@@ -60,12 +62,13 @@ from skimage import io
 import math
 import time
 
+# This constant signals that cv.drawContours() should draw all contours
 cv.DRAW_ALL_CONTOURS = -1
 ```
 
 ## Data Model
 
-The `Image` class is the base class for all other classes in the data model. Its `data` attribute contains image data as a numpy array.
+The `Image` class is the base class for all other classes of the data model. Its `data` attribute contains image data as a numpy array.
 
 ```python=
 class Image:
@@ -104,7 +107,7 @@ def create_frame(path):
     return Frame(io.imread(path))
 ```
 
-All frames are stored in an array called `frames`.
+All frames are then stored in a global array called `frames`.
 
 ```python=
 paths = [
@@ -166,7 +169,7 @@ for frame in frames:
 
 # 3. Rectangle detection
 
-In this step, a rectangle detection is performed to gather coordinates of potential matches for the secret pattern. To detect a rectangle, all filtered contours are approximated with less vertices. If an approximated contour consists of exactly four vertices and is convex, it is classified as a rectangle and included in the `frame.rectangles` attribute for further processing.
+In this step, a rectangle detection is performed to gather coordinates of potential matches for the secret pattern. To detect a rectangle, all filtered contours are approximated with reduced vertices. If an approximated contour consists of exactly four vertices and is convex, it is classified as a rectangle and thus included in the `frame.rectangles` attribute for further processing.
 
 ```python=
 def detect_rectangles(contours, accuracy):
@@ -185,19 +188,17 @@ for frame in frames:
 
 # 4. Detection of dashed lines
 
-For each detected rectangle, the presence or absence of a dashed line inside the contours has to be determined.
+For each detected rectangle, the presence or absence of a dashed line inside the contours has to be determined. Several steps are required to perform this operation.
 
 ## Create transformed sub-images
 
-Transform the content of every detected rectangle to a axis aligned new image
+To be able to do further processing, the first step is to cut out each rectangle and store it as a separate image. To exclude any content from outside the contour, a mask is generated and applied using a [Bitwise And Operation](https://docs.opencv.org/master/d0/d86/tutorial_py_image_arithmetics.html). Additionally, a [Perspective Transformation](https://docs.opencv.org/master/da/d6e/tutorial_py_geometric_transformations.html) is performed to correct any perspective distortion.
 
 ```python=
 def create_transformed_sub_image(frame_data, rectangle, size):
     rows, cols = frame_data.shape
     rect = rectangle[0]
-    #pts1 = order_points([rect[0][0], rect[1][0], rect[2][0], rect[3][0]])
     pts1 = np.float32(rect)
-    #pts2 = np.float32([[0, 0], [cols, 0], [cols, rows], [0, rows]])
     pts2 = np.float32([[0, 0], [size, 0], [size, size], [0, size]])
     
     dst = []
@@ -222,8 +223,9 @@ for i, frame in enumerate(frames):
 ```
 
 
-## Slice Extraction 
-For every edge of the detected rectangles, extract a slice margin from the transformed subimage. 
+## Slice Extraction
+
+As all parts of the dashed line are parallel to the outline of the rectangle, we can create new images containing only the dashed line segments by slicing the margin areas. Furthermore, by rotating the left and right slice, all sides are aligned horizontally. All four sides can thereby be treated equally in the next steps. The `margin` parameters allows us to specify the width of the extracted slices. The width of these slices is then scaled according to the `sub_margin` parameter.
 
 ```python=
 def extract_slices(data, margin, sub_margin):
@@ -249,14 +251,9 @@ for i, frame in enumerate(frames):
         sub_image.slices = [Slice(data) for data in extract_slices(sub_image.data, 1/7, 0)]
 ```
 
-## Detect dashed line from slice
-### 1. Projection of the 2D slice to 1D array
-- Create a 1-dimensional array with the same length as the slice
-- Initialize the array with zeroes
-- Detect contours of line segments
-- Get leftmost and rightmost pixel of every countour
-- Set all corresponding x values in the array to 255 (interval $[leftmost,rightmost]$)
--> Projection to 1D
+## Detect dashed lines in each slice
+
+To determine if a slice contains a dashed line, we first create a 1-dimensional array with the same length as the width of the slice. Using OpenCV's contour detection, we can then detect all contours of the line segments. A 1-dimensional projection of the dashed is created by setting all corresponding x values of each contour (interval $[leftmost, rightmost]$) in the array to 255.
 
 ```python=
 def create_line_data(data):
@@ -278,8 +275,7 @@ for frame in frames:
 
 ```
 
-### 2. Analyse the 1D-Projection
-Set a maximum streak length of ones and zeros in the 1D representation of the slice. A dashed line is detected if every streak length is below the given maximum.
+We can then define a method that checks if every stroke length of a line is below the given maximum. If all four slices are contain a dashed line, our secret pattern is considered as detected.
 
 ```python=
 def check_line_dashed(line_data, max_dash_length_pct):
@@ -307,7 +303,8 @@ for frame in frames:
 
 
 # 5. Image Manipulation
-Draw and fill out the detected rectangle. A gaussian blur with transformation of the original image data is way too slow while a simple black rectangle is much faster.
+
+The last step is to draw and fill out the detected rectangle. Because a gaussian blur with perspective transformation of the original image data was too slow, we decided to simply blacken it.
 
 
 ```python=
@@ -315,20 +312,6 @@ def blur_rectangle(image, rect):
     #simple black rectangle
     return cv.drawContours(image.copy(), [rect], cv.DRAW_ALL_CONTOURS, 1, cv.FILLED)
     
-    #Old code of gaussian blurred rectangle: 
-    #rows, cols, layers = image.shape
-    
-    #dst = []
-    #
-    #pts1 = order_points([rect[0][0],rect[1][0],rect[2][0],rect[3][0]])
-    #pts2 = np.float32([[0, 0], [cols, 0], [cols, rows], [0, rows]])
-    #m = cv.getPerspectiveTransform(pts1, pts2)
-    #dst = cv.warpPerspective(image, m, (cols, rows))
-    
-    #dst = cv.GaussianBlur(dst,(251,251),251)
-    #dst = np.zeros(image.shape, np.uint8)
-
-    #return cv.warpPerspective(dst, m, (cols, rows), image, cv.WARP_INVERSE_MAP, cv.BORDER_TRANSPARENT)
 
 for i, frame in enumerate(frames):
     for sub_image in frame.sub_images:
@@ -336,3 +319,17 @@ for i, frame in enumerate(frames):
             frame.original_data = blur_rectangle(frame.original_data, sub_image.rectangle[0])
 
 ```
+
+# Conclusion
+
+
+| Step                           | Average execution time  |
+| ------------------------------ | ----------------------- |
+| Preprocessing                  | 468 ms                  |
+| Contour Detection              | 6 ms                    |
+| Rectangle Detection            | 4 ms                    |
+| Create sub-images              | 63 ms                   |
+| Extract slices                 | 1 ms                    |
+| Detect dashed lines            | 1 ms                    |
+| Image Manipulation (blackened) | 4 ms                    |
+| Image Manipulation (blurring)  | 3000 ms                 |
