@@ -333,3 +333,8 @@ for i, frame in enumerate(frames):
 | Detect dashed lines            | 1 ms                    |
 | Image Manipulation (blackened) | 4 ms                    |
 | Image Manipulation (blurring)  | 3000 ms                 |
+| Image Manipulation (pixelation)| ? ms                    |
+
+The processing chain of the program is fast enough to handle 1 frame per second, which was our goal to be able to use it for processing with video in the future.
+
+
