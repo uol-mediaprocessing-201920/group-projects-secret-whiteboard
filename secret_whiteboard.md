@@ -322,6 +322,10 @@ for i, frame in enumerate(frames):
 
 # Conclusion
 
+## Average Execution Time
+
+We tried out multiple ideas for the image manipulation and since blurring was extremly slow compared to the other ones and blackening not being very aestetic, we decided to use pixelation at the final step of our program.
+With this the processing chain is fast enough to handle 1 image per second, so the usage in video processing like our use cases defined is very likely to be possible in a future version of the project.
 
 | Step                           | Average execution time  |
 | ------------------------------ | ----------------------- |
@@ -333,8 +337,39 @@ for i, frame in enumerate(frames):
 | Detect dashed lines            | 1 ms                    |
 | Image Manipulation (blackened) | 4 ms                    |
 | Image Manipulation (blurring)  | 3000 ms                 |
-| Image Manipulation (pixelation)| ? ms                    |
-
-The processing chain of the program is fast enough to handle 1 frame per second, which was our goal to be able to use it for processing with video in the future.
+| Image Manipulation (pixelation)| 37 ms                   |
 
 
+## Working Examples
+
+Our program works with a variety of images, is translational symmetric and works with a lot of imperfect drawn squares as well.
+
+![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20work/downscaled/image013.jpg) ![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20work%20blurred/downscaled/image003.jpg)
+
+![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20work/downscaled/image002.jpg) ![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20work%20blurred/downscaled/image005.jpg)
+
+![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20work/downscaled/image001.jpg) ![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20work%20blurred/downscaled/image004.jpg)
+
+![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20work/downscaled/image011.jpg) ![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20work%20blurred/downscaled/image001.jpg)
+
+![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20work/downscaled/image004.jpg) ![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20work%20blurred/downscaled/image007.jpg)
+
+![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20work/downscaled/image006.jpg) ![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20work%20blurred/downscaled/image009.jpg)
+
+![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20work/downscaled/image009.jpg) ![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20work%20blurred/downscaled/image012.jpg)
+
+![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20work/downscaled/image007.jpg) ![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20work%20blurred/downscaled/image010.jpg)
+
+## Failing Examples
+
+There are 4 criterias for our program to fail. The first is too long dashes that are longer than a 4th of the whole quadrilateral (which is our threshold), because then our pattern detection is not triggering. The second is holes in the outlines, that are so big, that they are not closed in our preprocessing. If the rectangle is not closed our rectangle detection is not working at all. The third criteria is too much between the lines, since our code is scanning just a small area around the margins for dashed lines and the detection of those is failing through this. The forth reason for failure is too curvy rectangles, that slip through the detection process.
+
+![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20don't%20work/downscaled/image005.jpg) ![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20don't%20work/downscaled/image002.jpg)
+
+![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20don't%20work/downscaled/image003.jpg) ![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20don't%20work/downscaled/image001.jpg)
+
+![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20don't%20work/downscaled/image004.jpg) ![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/samples/images%20that%20don't%20work/downscaled/image006.jpg)
+
+# Outlook Deep Learning
+
+The biggest problem with our program is the inflexibility for poorly drawn patterns. To solve this, Deep Learning could be used to provide a more general solution.
