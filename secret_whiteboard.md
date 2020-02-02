@@ -372,4 +372,11 @@ There are 4 criterias for our program to fail. The first is too long dashes that
 
 # Outlook Deep Learning
 
-The biggest problem with our program is the inflexibility for poorly drawn patterns. To solve this, Deep Learning could be used to provide a more general solution.
+Although the proposed algorithm is working very well with patterns exactly fitting our metric, it is still lacking the flexibility needed for perfect results with the variability of human drawn images. Therefore, as an outlook for further developement, a deep learning approach may be required. We have identified two major error sources in our processing chain, that lead to the examples in which our algorithm fails.
+
+The first error source is our rectangle detection that is not able to detect rectangles without completely continuous lines.
+Because there are many faster algorithmic solutions, that we have not yet explored, this problem may be less suitable for deep learning. For example the Hough Line Transform method may lead to great results, whilst a Deep Learning approach may require a lot of effort due to the fact, that we have to find the four vertices of every rectangle in a consistent manner.
+
+The second and much broader error source of our algorithm, is the metric for the detection of dashed lines. Lines with big gaps or too long dashes are not detected, just as the distance to the outline or object reaching within the slice can distort the detection. 
+
+As a solution to this second error source, we find a Deep Learning approach to be perfectly suitable. As an input image, the already preprocessed and sliced margin areas of the transformed subimages can simplify the task a lot. A convolutional neural network, for example, would lead to an highly improved detection given the existence of enough training data. The mass of training data needed could be aquired partly through generation, since dashed lines are easy to generate in great variations, and in other parts through a larger, more sophisticated crowd survey. Data augmentation is also applicable, although rotation augmentation must be limeted to a certain degree. 
