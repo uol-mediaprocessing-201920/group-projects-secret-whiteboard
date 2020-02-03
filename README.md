@@ -1,21 +1,3 @@
-Abgeschlossen
-- Code Refactoring
-- Closing im Preprocessing
-- Contour Detection neugeschrieben, basierend auf Hierarchy Tree Depth
-- Implementierung einer Filtermaske für die Sub-Images
-- Blurring durch Schwärzen ersetzt aufgrund von besserer Performance
-
-Sind dabei
-- Blurring statt Schwärzung verwenden
-- Parameter anpassen
-- Contours, die in die Margin reichen, nicht zählen lassen
-- Doku schreiben
-
-Zukünftig
-- Videos rendern
-
---------------------
-
 # Confidential Whiteboard Contents
 
 ## Team Members
