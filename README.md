@@ -121,7 +121,7 @@ Because OpenCV's [Contour Detection](https://docs.opencv.org/master/d4/d73/tutor
 
 As shown in the next figure, an inner contour of a shape always has an uneven depth in the tree. Additionally, we only need inner contours for further processing. Because of that, only contours with an even depth are included in the returned array.
 
-![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/doc_images/contour_counter.png)
+![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/doc_images/contour_counter_1.png) ![](https://raw.githubusercontent.com/uol-mediaprocessing/group-projects-secret-whiteboard/master/img/doc_images/contour_counter_2.png)
 
 ```python=
 def find_contours_filtered(data):
